@@ -1,67 +1,73 @@
-const weatherCodes = {
-    0: "Clear sky",
-    1: "Mainly clear",
-    2: "Partly cloudy",
-    3: "Overcast",
-    45: "Fog",
-    48: "Rime fog",
-    51: "Light drizzle",
-    53: "Moderate drizzle",
-    55: "Dense drizzle",
-    61: "Slight rain",
-    63: "Moderate rain",
-    65: "Heavy rain",
-    71: "Slight snow",
-    73: "Moderate snow",
-    75: "Heavy snow",
-    95: "Thunderstorm"
-};
+const cityInput = document.getElementById("cityInput");
+const historyList = document.getElementById("historyList");
+const weatherResult = document.getElementById("weatherResult");
 
-async function getWeather() {
-    const city = document.getElementById("cityInput").value.trim();
-    if (!city) {
-        alert("Please enter a city name");
-        return;
+const API_KEY = "6c0572c78dfaa49e68c9b9791f1aecbb"; 
+
+loadHistory();
+
+/* =========================
+   Fetch Weather
+========================= */
+async function getWeather(cityFromClick) {
+  const city = cityFromClick || cityInput.value.trim();
+  if (!city) return;
+
+  try {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`
+    );
+
+    if (!res.ok) {
+      throw new Error("City not found");
     }
 
-    try {
-        // Geocoding API
-        const geoRes = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`
-        );
-        const geoData = await geoRes.json();
+    const data = await res.json();
 
-        if (!geoData.results) {
-            alert("City not found");
-            return;
-        }
+    weatherResult.innerHTML = `
+      <h2>${data.name}, ${data.sys.country}</h2>
+      <p>🌡 Temperature: ${data.main.temp} °C</p>
+      <p>🌥 Weather: ${data.weather[0].description}</p>
+      <p>💨 Wind: ${data.wind.speed} m/s</p>
+    `;
 
-        const { latitude, longitude, country, name } = geoData.results[0];
+    saveHistory(city);
+    loadHistory();
+    cityInput.value = "";
 
-        // Weather API
-        const weatherRes = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=apparent_temperature`
-        );
-        const weatherData = await weatherRes.json();
+  } catch (error) {
+    weatherResult.innerHTML = `<p style="color:red;">❌ Can't fetch data</p>`;
+    console.error(error);
+  }
+}
 
-        const current = weatherData.current_weather;
-        const feelsLike = weatherData.hourly.apparent_temperature[0];
+/* =========================
+   History Functions
+========================= */
+function saveHistory(city) {
+  let history = JSON.parse(localStorage.getItem("weatherHistory")) || [];
 
-        const now = new Date().toLocaleString();
+  if (!history.includes(city)) {
+    history.unshift(city);
+    if (history.length > 5) history.pop();
+  }
 
-        document.getElementById("location").innerText =
-            `${name}, ${country}`;
-        document.getElementById("datetime").innerText = now;
-        document.getElementById("temperature").innerText =
-            `${current.temperature}°C`;
-        document.getElementById("feelsLike").innerText =
-            `Feels like ${feelsLike}°C`;
-        document.getElementById("description").innerText =
-            weatherCodes[current.weathercode] || "Unknown weather";
+  localStorage.setItem("weatherHistory", JSON.stringify(history));
+}
 
-        document.getElementById("weatherCard").style.display = "block";
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem("weatherHistory")) || [];
+  historyList.innerHTML = "";
 
-    } catch (error) {
-        alert("Error fetching weather data");
-    }
+  history.forEach(city => {
+    const li = document.createElement("li");
+    li.textContent = city;
+    li.onclick = () => getWeather(city);
+    historyList.appendChild(li);
+  });
+}
+
+function clearHistory() {
+  localStorage.removeItem("weatherHistory");
+  loadHistory();
 }
