@@ -1,30 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Weather App</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
+  <div class="app">
     <h1>🌤 Weather App</h1>
 
+    <!-- Search Section -->
     <div class="search-box">
-        <input type="text" id="cityInput" placeholder="Enter city name">
-        <button onclick="getWeather()">Get Weather</button>
+      <input 
+        type="text" 
+        id="cityInput" 
+        placeholder="Enter city name"
+        autocomplete="off"
+      />
+
+      <button onclick="getWeather()">Search</button>
+      <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+
+      <!-- Suggestions -->
+      <ul id="suggestions" class="suggestions"></ul>
     </div>
 
-    <div class="weather-card" id="weatherCard">
-        <p class="location" id="location"></p>
-        <p class="datetime" id="datetime"></p>
-        <h2 id="temperature"></h2>
-        <p id="feelsLike"></p>
-        <p class="description" id="description"></p>
-    </div>
-</div>
+    <!-- Weather Output -->
+    <div id="weatherResult" class="weather-result"></div>
 
-<script src="script.js"></script>
+    <!-- Search History -->
+    <div class="history">
+      <h3>Search History</h3>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
